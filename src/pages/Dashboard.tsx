@@ -25,6 +25,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import QueryBot from "@/components/QueryBot";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface Report {
   id: string;
@@ -40,6 +41,7 @@ interface Report {
   number_of_patients: number;
   health_condition: string;
   help_needed: string;
+  help_categories: string[];
   additional_info: string;
   urgency_level: number;
   status: string;
@@ -55,6 +57,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [urgencyFilter, setUrgencyFilter] = useState<number | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
     fetchReports();
@@ -83,11 +86,21 @@ const Dashboard = () => {
   useEffect(() => {
     const searchReports = async () => {
       if (!searchTerm.trim()) {
-        // No search term - show all reports with urgency filter
+        // No search term - show all reports with filters
         let filtered = reports;
+        
+        // Apply urgency filter
         if (urgencyFilter !== null) {
           filtered = filtered.filter((r) => r.urgency_level === urgencyFilter);
         }
+        
+        // Apply help category filters
+        if (selectedCategories.length > 0) {
+          filtered = filtered.filter((r) => 
+            selectedCategories.some(cat => r.help_categories?.includes(cat))
+          );
+        }
+        
         setFilteredReports(filtered);
         return;
       }
@@ -105,7 +118,16 @@ const Dashboard = () => {
 
         if (error) throw error;
 
-        setFilteredReports(data.reports || []);
+        let searchResults = data.reports || [];
+        
+        // Apply help category filters to search results
+        if (selectedCategories.length > 0) {
+          searchResults = searchResults.filter((r: Report) => 
+            selectedCategories.some(cat => r.help_categories?.includes(cat))
+          );
+        }
+
+        setFilteredReports(searchResults);
       } catch (err) {
         console.error('Search error:', err);
         toast.error('ไม่สามารถค้นหาได้', {
@@ -115,6 +137,11 @@ const Dashboard = () => {
         let filtered = reports;
         if (urgencyFilter !== null) {
           filtered = filtered.filter((r) => r.urgency_level === urgencyFilter);
+        }
+        if (selectedCategories.length > 0) {
+          filtered = filtered.filter((r) => 
+            selectedCategories.some(cat => r.help_categories?.includes(cat))
+          );
         }
         setFilteredReports(filtered);
       } finally {
@@ -128,7 +155,7 @@ const Dashboard = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [reports, searchTerm, urgencyFilter]);
+  }, [reports, searchTerm, urgencyFilter, selectedCategories]);
 
   const fetchReports = async () => {
     setIsLoading(true);
@@ -222,39 +249,92 @@ const Dashboard = () => {
         {/* Filters */}
         <Card>
           <CardHeader>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Input
-                  placeholder="ค้นหาอัจฉริยะ: ชื่อ, ที่อยู่, เบอร์โทร, อาการ, ความช่วยเหลือ... (ใช้ AI)"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {isSearching && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                  </div>
-                )}
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="ค้นหาอัจฉริยะ: ชื่อ, ที่อยู่, เบอร์โทร, อาการ, ความช่วยเหลือ... (ใช้ AI)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex gap-2 flex-wrap">
-                <Button
-                  variant={urgencyFilter === null ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setUrgencyFilter(null)}
-                >
-                  <Filter className="mr-2 h-4 w-4" />
-                  ทั้งหมด
-                </Button>
-                {[1, 2, 3, 4, 5].map((level) => (
+              
+              {/* Urgency Filter */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium">ระดับความเร่งด่วน</div>
+                <div className="flex gap-2 flex-wrap">
                   <Button
-                    key={level}
-                    variant={urgencyFilter === level ? "default" : "outline"}
+                    variant={urgencyFilter === null ? "default" : "outline"}
                     size="sm"
-                    onClick={() => setUrgencyFilter(level)}
-                    className={urgencyFilter === level ? getUrgencyBadgeClass(level) : ""}
+                    onClick={() => setUrgencyFilter(null)}
                   >
-                    ระดับ {level}
+                    <Filter className="mr-2 h-4 w-4" />
+                    ทั้งหมด
                   </Button>
-                ))}
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <Button
+                      key={level}
+                      variant={urgencyFilter === level ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setUrgencyFilter(level)}
+                      className={urgencyFilter === level ? getUrgencyBadgeClass(level) : ""}
+                    >
+                      ระดับ {level}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Help Category Filter */}
+              <div className="space-y-2">
+                <div className="text-sm font-medium">ประเภทความช่วยเหลือ</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {[
+                    { id: 'drowning', label: 'จมน้ำ', icon: '🌊' },
+                    { id: 'trapped', label: 'ติดขัง', icon: '🚪' },
+                    { id: 'unreachable', label: 'ติดต่อไม่ได้', icon: '📵' },
+                    { id: 'water', label: 'ขาดน้ำดื่ม', icon: '💧' },
+                    { id: 'food', label: 'ขาดอาหาร', icon: '🍚' },
+                    { id: 'electricity', label: 'ขาดไฟฟ้า', icon: '⚡' },
+                    { id: 'shelter', label: 'ที่พักพิง', icon: '🏠' },
+                    { id: 'medical', label: 'ต้องการรักษา', icon: '🏥' },
+                    { id: 'medicine', label: 'ขาดยา', icon: '💊' },
+                    { id: 'evacuation', label: 'อพยพ', icon: '🚁' },
+                    { id: 'missing', label: 'คนหาย', icon: '🔍' },
+                    { id: 'clothes', label: 'เสื้อผ้า', icon: '👕' },
+                  ].map((category) => (
+                    <div
+                      key={category.id}
+                      className={`flex items-center space-x-2 p-2 rounded-md border cursor-pointer transition-colors ${
+                        selectedCategories.includes(category.id)
+                          ? 'bg-primary/10 border-primary'
+                          : 'bg-muted/30 border-border hover:bg-muted/50'
+                      }`}
+                      onClick={() => {
+                        setSelectedCategories((prev) =>
+                          prev.includes(category.id)
+                            ? prev.filter((c) => c !== category.id)
+                            : [...prev, category.id]
+                        );
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedCategories.includes(category.id)}
+                        onCheckedChange={() => {}}
+                      />
+                      <span className="text-sm flex items-center gap-1">
+                        <span>{category.icon}</span>
+                        <span>{category.label}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </CardHeader>

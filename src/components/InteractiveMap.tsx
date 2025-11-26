@@ -40,8 +40,8 @@ const URGENCY_COLORS = {
 
 const InteractiveMap = ({
     reports,
-    center = [13.7563, 100.5018], // Default to Bangkok, Thailand
-    zoom = 12,
+    center = [13.7563, 100.5018], // Default to center of Thailand
+    zoom = 6,
     showLegend = true,
 }: InteractiveMapProps) => {
     const mapRef = useRef<L.Map | null>(null);
@@ -52,11 +52,20 @@ const InteractiveMap = ({
     useEffect(() => {
         if (!mapContainerRef.current || mapRef.current) return;
 
+        // Thailand bounds (approximate)
+        const thailandBounds: L.LatLngBoundsExpression = [
+            [5.6, 97.3],  // Southwest coordinates
+            [20.5, 105.6] // Northeast coordinates
+        ];
+
         // Initialize map
         const map = L.map(mapContainerRef.current, {
             center,
             zoom,
             zoomControl: true,
+            maxBounds: thailandBounds,
+            maxBoundsViscosity: 0.7,
+            minZoom: 5,
         });
 
         mapRef.current = map;
@@ -132,16 +141,17 @@ const InteractiveMap = ({
             },
         });
 
-        // Add markers for each report with valid location
+        // Add markers for each report with valid location within Thailand
         const validReports = reports.filter((report) => {
             const lat = parseFloat(report.location_lat?.toString() || '0');
             const lng = parseFloat(report.location_long?.toString() || '0');
 
+            // Filter for locations within Thailand bounds
             return (
                 !isNaN(lat) &&
                 !isNaN(lng) &&
-                lat >= -90 && lat <= 90 &&
-                lng >= -180 && lng <= 180
+                lat >= 5.6 && lat <= 20.5 &&
+                lng >= 97.3 && lng <= 105.6
             );
         });
 

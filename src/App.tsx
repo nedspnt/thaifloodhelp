@@ -7,10 +7,12 @@ import Input from "./pages/Input";
 import SelectReports from "./pages/SelectReports";
 import Review from "./pages/Review";
 import Dashboard from "./pages/Dashboard";
+import Stats from "./pages/Stats";
 import ReportDetail from "./pages/ReportDetail";
 import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
 
 const queryClient = new QueryClient();
 
@@ -21,12 +23,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="flex flex-col min-h-screen">
+          <Navbar />
           <div className="flex-1">
             <Routes>
               <Route path="/" element={<Input />} />
               <Route path="/select" element={<SelectReports />} />
               <Route path="/review" element={<Review />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/stats" element={<Stats />} />
               <Route path="/report/:id" element={<ReportDetail />} />
               <Route path="/help" element={<Help />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

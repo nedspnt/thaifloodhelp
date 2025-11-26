@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/lib/utils";
 import { useLiff } from "@/contexts/LiffContext";
+import { Share2 } from "lucide-react";
 
 const Input = () => {
   const [rawMessage, setRawMessage] = useState("");
@@ -20,7 +21,16 @@ const Input = () => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { isLoggedIn, profile, isLoading: isLiffLoading, isInLiffClient } = useLiff();
+  const { isLoggedIn, profile, isLoading: isLiffLoading, isInLiffClient, shareTargetPicker, isShareAvailable } = useLiff();
+
+  const handleShare = async () => {
+    try {
+      await shareTargetPicker();
+      toast.success('ขอบคุณที่ช่วยแชร์ครับ');
+    } catch (err) {
+      console.error('Share error:', err);
+    }
+  };
 
   const processImageFile = async (file: File) => {
     // Validate file type
@@ -381,6 +391,17 @@ const Input = () => {
               ) : (
                 "ประมวลผลด้วย AI"
               )}
+            </Button>
+
+            {/* LINE Share Button */}
+            <Button
+              onClick={handleShare}
+              variant="outline"
+              size="lg"
+              className="w-full text-lg h-12 bg-[#06C755] hover:bg-[#05b34c] text-white border-[#06C755] hover:border-[#05b34c]"
+            >
+              <Share2 className="mr-2 h-5 w-5" />
+              แชร์ผ่าน LINE
             </Button>
 
             <div className="text-center space-y-2">

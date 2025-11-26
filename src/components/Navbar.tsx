@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Database, BarChart3, HelpCircle, Menu, X } from "lucide-react";
+import { Home, Database, BarChart3, HelpCircle, Menu, X, Code } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import {
@@ -34,6 +34,12 @@ const Navbar = () => {
       label: "สถิติ",
       icon: BarChart3,
       description: "สถิติและรายงาน",
+    },
+    {
+      path: "/api",
+      label: "API",
+      icon: Code,
+      description: "API Documentation",
     },
     {
       path: "/help",

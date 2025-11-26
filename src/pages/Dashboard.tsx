@@ -951,7 +951,7 @@ const Dashboard = () => {
                                       <h4 className="font-semibold mb-2">Metadata</h4>
                                       <div className="space-y-1 text-sm">
                                         <p><span className="font-medium">สถานะ:</span> {report.status || '-'}</p>
-                                        <p><span className="font-medium">ระดับความเร่งด่วน:</span> {report.urgency_level}</p>
+                                        <p><span className="font-medium">ความเร่งด่วน:</span> {report.urgency_level}</p>
                                         <p className="break-words"><span className="font-medium">วันที่บันทึก:</span> {new Date(report.created_at).toLocaleString('th-TH')}</p>
                                         <p className="break-words"><span className="font-medium">แก้ไขล่าสุด:</span> {new Date(report.updated_at).toLocaleString('th-TH')}</p>
                                         <p className="break-words">
